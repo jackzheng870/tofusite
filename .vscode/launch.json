@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-TofusiteApplication<tofusite>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "mainClass": "io.github.jackzheng870.tofusite.TofusiteApplication",
+            "projectName": "tofusite",
+            "args": ""
+        }
+    ]
+}

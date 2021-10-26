@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "pivotal.vscode-boot-dev-pack",
+        "redhat.vscode-xml",
+        "sonarsource.sonarlint-vscode",
+        "vscjava.vscode-java-pack"
+    ]
+}
