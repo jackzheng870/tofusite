@@ -17,14 +17,15 @@
 
     </style>
 
-    <title>豆服</title>
+    <title th:text="${name}"></title>
   </head>
 
   <body class="d-flex h-100 justify-content-center align-items-center text-center text-white bg-dark">
     <div>
-      <h1>豆服目前<span th:class="${online} ? 'text-green' : 'text-red'" th:text="${online} ? '在线' : '离线'"></span></h1>
+      <h1><span th:text="${name}"></span>目前<span th:class="${online} ? 'text-green' : 'text-red'"
+          th:text="${online} ? '在线' : '离线'"></span></h1>
       <hr>
-      <pre>server.tofuhero.me</pre>
+      <pre th:text="${server}"></pre>
     </div>
   </body>
 </html>
