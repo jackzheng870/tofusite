@@ -12,7 +12,7 @@
 
   <groupId>io.github.jackzheng870</groupId>
   <artifactId>tofusite</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
 
   <name>Tofusite</name>
   <description>豆服 Minecraft 服务器网站</description>
