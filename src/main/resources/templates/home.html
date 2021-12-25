@@ -15,17 +15,42 @@
         color: var(--bs-red);
       }
 
+      .animate-pulse {
+        animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite;
+      }
+
+      @keyframes pulse {
+        50% {
+          opacity: .5;
+        }
+      }
+
     </style>
 
     <title th:text="${name}"></title>
+    <script defer src="https://unpkg.com/alpinejs@3.7.1/dist/cdn.min.js"></script>
   </head>
 
   <body class="d-flex h-100 justify-content-center align-items-center text-center text-white bg-dark">
-    <div>
-      <h1><span th:text="${name}"></span>目前<span th:class="${online} ? 'text-green' : 'text-red'"
-          th:text="${online} ? '在线' : '离线'"></span></h1>
+    <main x-data="main" x-init="updateStatus">
+      <h1><span th:text="${name}"></span>目前<span
+          :class="status ? (status.online ? 'text-green' : 'text-red') : 'animate-pulse'"
+          x-text="status ? (status.online ? '在线' : '离线') : '⋯⋯'">⋯⋯</span></h1>
       <hr>
       <pre th:text="${host}"></pre>
-    </div>
+    </main>
+
+    <script>
+      document.addEventListener('alpine:init', () => {
+        Alpine.data('main', () => ({
+          status: null,
+
+          async updateStatus() {
+            this.status = await fetch('/status').then(response => response.json());
+            setTimeout(() => this.updateStatus(), 10 * 1000);
+          }
+        }))
+      })
+    </script>
   </body>
 </html>

@@ -1,5 +1,6 @@
 {
     "recommendations": [
+        "adrianwilczynski.alpine-js-intellisense",
         "gabrielbb.vscode-lombok",
         "pivotal.vscode-boot-dev-pack",
         "redhat.vscode-xml",
