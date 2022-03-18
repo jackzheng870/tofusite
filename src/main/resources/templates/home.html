@@ -1,43 +1,48 @@
 <!doctype html>
-<html class="h-100" lang="zh-CN">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
-      integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    <style>
-      .text-green {
-        color: var(--bs-green);
-      }
-
-      .text-red {
-        color: var(--bs-red);
-      }
-
-      .animate-pulse {
-        animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite;
-      }
-
-      @keyframes pulse {
-        50% {
-          opacity: .5;
-        }
-      }
-
-    </style>
-
+    <link rel="stylesheet" href="/tailwind.css">
     <title th:text="${name}"></title>
     <script defer src="https://unpkg.com/alpinejs@3.7.1/dist/cdn.min.js"></script>
   </head>
 
-  <body class="d-flex h-100 justify-content-center align-items-center text-center text-white bg-dark">
-    <main x-data="main" x-init="updateStatus">
-      <h1><span th:text="${name}"></span>目前<span
-          :class="status ? (status.online ? 'text-green' : 'text-red') : 'animate-pulse'"
-          x-text="status ? (status.online ? '在线' : '离线') : '⋯⋯'">⋯⋯</span></h1>
-      <hr>
-      <pre th:text="${host}"></pre>
+  <body class="h-screen flex justify-center items-center bg-stone-800 text-white">
+    <main class="w-11/12 max-w-xl h-fit bg-[#121212] rounded border-2 border-[#808080] px-3 py-2 sm:text-2xl"
+      x-data="main" x-init="updateStatus">
+      <div class="flex justify-between font-mono">
+        <p th:text="${port} == 25565 ? ${host} : |${host}:${port}|"></p>
+        <div class="flex space-x-2">
+          <template x-if="status && status.online">
+            <p class="text-[#aaa]"
+              :title="status && status.online && status.sample.map(profile => profile.name).join('\n').replace(/§./g, '')">
+              <span x-text="status && status.online && status.player.online"></span><span
+                class="text-[#555]">/</span><span x-text="status && status.online && status.player.max"></span>
+            </p>
+          </template>
+          <svg fill="currentColor" class="w-[1em] text-[#999]"
+            :class="{ 'text-[#999] animate-pulse': !status, 'text-[#cc2929]': status && !status.online, 'text-[#80ff00]': status && status.online }"
+            viewBox="0 0 16 16">
+            <path
+              d="M0 11.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2zm4-3a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-5zm4-3a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-8zm4-3a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v11a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-11z" />
+          </svg>
+        </div>
+      </div>
+      <div class="h-12 sm:h-16 text-[#808080]">
+        <template x-if="!status">
+          <p>正在获取服务器状态信息……</p>
+        </template>
+        <template x-if="status && !status.online">
+          <p class="text-[#a00]">无法连接到服务器</p>
+        </template>
+        <template x-if="status && status.online">
+          <p class="line-clamp-2 whitespace-pre-line"
+            :title="status && status.online && status.motd.map(text => text.content).join('').replace(/§./g, '')"
+            x-html="status && status.online && status.motd.flatMap(text => formatText(text)).map(node => node.outerHTML ?? node).join('')">
+          </p>
+        </template>
+      </div>
     </main>
 
     <script>
@@ -46,8 +51,113 @@
           status: null,
 
           async updateStatus() {
-            this.status = await fetch('/status').then(response => response.json());
+            this.status = await fetch('/status').then(response => response.json()).catch(console.error);
             setTimeout(() => this.updateStatus(), 10 * 1000);
+          },
+
+          formatText(text) {
+            if (typeof text === 'object') {
+              const span = document.createElement('span');
+              for (const decoration in text.decorations) {
+                if (text.decorations[decoration] === 'true') {
+                  const className = this.getFormattingClass(decoration);
+                  if (className) span.classList.add(className);
+                }
+              }
+              const nodes = this.formatText(text.content);
+              if (text.color) {
+                if (text.color.startsWith('#')) {
+                  span.style.color = text.color;
+                } else {
+                  span.classList.add(this.getFormattingClass(text.color));
+                }
+              } else if (!span.classList.length) {
+                return nodes;
+              }
+              span.append(...nodes);
+              return span;
+            } else if (typeof text === 'string') {
+              const nodes = [];
+              let span;
+              text.split(/((?:§.)+)/).forEach(part => {
+                const codes = part.match(/§./g);
+                if (codes) {
+                  span = document.createElement('span');
+                  span.classList.add(...codes.map(code => this.getFormattingClass(code)).filter(Boolean));
+                } else if (span && span.classList.length) {
+                  span.append(part);
+                  nodes.push(span);
+                } else {
+                  nodes.push(part);
+                }
+              });
+              return nodes;
+            }
+          },
+
+          getFormattingClass(codeOrName) {
+            switch (codeOrName.replace('§', '')) {
+              case '0':
+              case 'black':
+                return 'text-black';
+              case '1':
+              case 'dark_blue':
+                return 'text-[#00a]';
+              case '2':
+              case 'dark_green':
+                return 'text-[#0a0]';
+              case '3':
+              case 'dark_aqua':
+                return 'text-[#0aa]';
+              case '4':
+              case 'dark_red':
+                return 'text-[#a00]';
+              case '5':
+              case 'dark_purple':
+                return 'text-[#a0a]';
+              case '6':
+              case 'gold':
+                return 'text-[#fa0]';
+              case '7':
+              case 'gray':
+                return 'text-[#aaa]';
+              case '8':
+              case 'dark_gray':
+                return 'text-[#555]';
+              case '9':
+              case 'blue':
+                return 'text-[#55f]';
+              case 'a':
+              case 'green':
+                return 'text-[#5f5]';
+              case 'b':
+              case 'aqua':
+                return 'text-[#5ff]';
+              case 'c':
+              case 'red':
+                return 'text-[#f55]';
+              case 'd':
+              case 'light_purple':
+                return 'text-[#f5f]';
+              case 'e':
+              case 'yellow':
+                return 'text-[#ff5]';
+              case 'f':
+              case 'white':
+                return 'text-white';
+              case 'l':
+              case 'bold':
+                return 'font-bold';
+              case 'm':
+              case 'strikethrough':
+                return 'line-through';
+              case 'n':
+              case 'underlined':
+                return 'underline';
+              case 'o':
+              case 'italic':
+                return 'italic';
+            }
           }
         }))
       })

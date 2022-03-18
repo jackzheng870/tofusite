@@ -1,6 +1,8 @@
 {
     "recommendations": [
         "adrianwilczynski.alpine-js-intellisense",
+        "bradlc.vscode-tailwindcss",
+        "csstools.postcss",
         "gabrielbb.vscode-lombok",
         "pivotal.vscode-boot-dev-pack",
         "redhat.vscode-xml",

@@ -16,6 +16,7 @@ public class HomeController {
     public String home(Model model) {
         model.addAttribute("name", properties.getName());
         model.addAttribute("host", properties.getHost());
+        model.addAttribute("port", properties.getPort());
         return "home";
     }
 }
